@@ -16,12 +16,18 @@ def send_to_prtg(data, ups_name):
         prtg_element = ET.Element("prtg")
 
         for key, value in data.items():
-            result_element = ET.SubElement(prtg_element, "result")
-            channel_element = ET.SubElement(result_element, "channel")
-            channel_element.text = key
-            value_element = ET.SubElement(result_element, "value")
-            value_element.text = str(value)
-            if isinstance(value, float):
+            if value.isdigit():
+                result_element = ET.SubElement(prtg_element, "result")
+                channel_element = ET.SubElement(result_element, "channel")
+                channel_element.text = key
+                value_element = ET.SubElement(result_element, "value")
+                value_element.text = str(int(value))
+            elif value.replace(".", "", 1).isdigit():
+                result_element = ET.SubElement(prtg_element, "result")
+                channel_element = ET.SubElement(result_element, "channel")
+                channel_element.text = key
+                value_element = ET.SubElement(result_element, "value")
+                value_element.text = str(float(value))
                 float_element = ET.SubElement(result_element, "float")
                 float_element.text = "1"
 
@@ -45,6 +51,9 @@ def send_to_prtg(data, ups_name):
             print(f"Failed to send data to PRTG. Error: {response.text}")
     except Exception as e:
         print(f"An error occurred while sending data to PRTG: {str(e)}")
+
+    # print the formatted xml
+    # print(ET.tostring(prtg_element, encoding="utf-8", method="xml"))
 
 
 def write_to_influxdb(data, ups_name):
