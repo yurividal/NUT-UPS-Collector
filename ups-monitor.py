@@ -2,15 +2,18 @@ import subprocess
 from influxdb import InfluxDBClient
 import time
 import requests
-
 import xml.etree.ElementTree as ET
+
+PRTG_IP = "192.168.36.13"
+INFLUXDB_IP = "192.168.36.14"
+UPS_NAMES = ["EatonUPS1", "EatonUPS2"]
 
 
 def send_to_prtg(data, ups_name):
     print("Sending data to PRTG")
     try:
         # PRTG HTTP Push Data Advanced sensor URL
-        sensor_url = "http://192.168.36.13:5050/" + ups_name
+        sensor_url = "http://" + PRTG_IP + ":5050/" + ups_name
 
         # Prepare payload
         prtg_element = ET.Element("prtg")
@@ -60,7 +63,7 @@ def write_to_influxdb(data, ups_name):
     print("Writing data to InfluxDB")
     try:
         # Configure InfluxDB connection
-        client = InfluxDBClient(host="192.168.36.14", port=8086)
+        client = InfluxDBClient(host=INFLUXDB_IP, port=8086)
         client.switch_database("telegraf")
 
         # Prepare data points
@@ -109,8 +112,7 @@ def parse_upsc_output(output, ups_name):
 def main():
     while True:
         try:
-            ups_names = ["EatonUPS1", "EatonUPS2"]
-            for ups_name in ups_names:
+            for ups_name in UPS_NAMES:
                 print("Getting data for " + ups_name)
                 command = f"/usr/bin/upsc {ups_name}"
                 process = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
@@ -121,8 +123,8 @@ def main():
                 else:
                     # Parse the output
                     parse_upsc_output(output.decode(), ups_name)
-            print("Sleeping for 30 seconds")
-            time.sleep(30)
+            print("Sleeping for 10 seconds")
+            time.sleep(10)
         except Exception as e:
             print(f"An error occurred in the main loop: {str(e)}")
 
